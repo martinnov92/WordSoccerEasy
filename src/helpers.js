@@ -11,7 +11,7 @@ export function shuffleArray(array) {
 }
 
 // return random number
-export function randomNumber(min, max) {
+export function randomWords(min, max) {
     return Math.floor(max - Math.random()*(max - min));
 }
 

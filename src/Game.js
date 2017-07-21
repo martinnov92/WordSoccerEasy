@@ -2,15 +2,18 @@ import React, { Component } from 'react';
 import Sound from 'react-sound';
 import './Game.css';
 import './helpers.css';
+import './words.json';
+
 import {select_sound} from './helpers.js';
 import Timer from './Timer.js';
 
 import sounds from './sounds.js';
+import ball from './img/ball.png';
 
 var FontAwesome = require('react-fontawesome');
 
 
-const SECONDS = 60;
+const SECONDS = 15;
 
 class Game extends Component {
     constructor(props){
@@ -32,13 +35,10 @@ class Game extends Component {
             soundStatus: 'stop',
             soundName: '',
 
-            soundsToPlay: [],
-
             // display labyrinth
             display: true,
+            wordStr: '',
 
-            // player position
-            player: {posX: 0, posY:0},
 
             // score
             score: 0
@@ -119,94 +119,29 @@ class Game extends Component {
             return 60;
         }
     }
-
-    controlPos(direction) {
-        let player = this.state.player;
-
-        switch(direction) {
-            case 'up':
-                if (player.top) {
-                    this.setState({
-                        soundStatus: 'play',
-                        soundName: 'failure'
-                    });
-                    return false;
-                } else {
-                    return true;
-                }
-            case 'down':
-                if (player.bottom) {
-                    this.setState({
-                        soundStatus: 'play',
-                        soundName: 'failure'
-                    });
-                    return false;
-                } else {
-                    return true;
-                }
-            case 'left':
-                if (player.left) {
-                    this.setState({
-                        soundStatus: 'play',
-                        soundName: 'failure'
-                    });
-                    return false;
-                } else {
-                    return true;
-                }
-            case 'right':
-                if (player.right) {
-                    this.setState({
-                        soundStatus: 'play',
-                        soundName: 'failure'
-                    });
-                    return false;
-                } else {
-                    return true;
-                }
-            default :
-                return null;
+    // Reader word
+   /* readWord(Word) {
+        word.hash
+        let wordStr = this.reader(word);
+        if (this.state.voices) {
+            window.responsiveVoice.speak(word, "Czech Female");
         }
+    }*/
+
+    /*reader(word) {
+        let wordStr = {
+            wordStr: '',
+        };
+    }*/
+
+
+   /* generateNewWord() {
+       let words = wordCs;
+
     }
+*/
 
-    movePlayer(x, y) {
-        let newX = this.state.player.posX + x;
-        let newY = this.state.player.posY + y;
 
-        if ((newX >= 0 &&  newX <= 10/*gameArray_length*/) && (newY >= 0 && newY <= 10/*gameArray_length*/)) {
-            this.setState({
-                player: {
-                    posX: newX,
-                    posY: newY
-                }
-            }, () => {
-                if (newY !== 10/*gameArray_length*/ || newX !== 10/*gameArray_length*/) {
-                }
-            });
-
-            if (newX === 10/*gameFinish_position*/ && newY === 10/*gameFinish_position*/) {
-                let newScore = this.state.score + 10;
-
-                this.setState({
-                    soundStatus: 'play',
-                    soundName: 'success',
-
-                    player: {
-                        posX: 0,
-                        posY: 0
-                    },
-
-                    score: newScore
-                });
-
-            }
-        } else {
-            this.setState({
-                soundStatus: 'play',
-                soundName: 'failure'
-            });
-        }
-    }
 
     // handle keyDown - move player by 'Arrow keys', 'Alt' to read possible directions
     handleKeyDown(e) {
@@ -223,45 +158,18 @@ class Game extends Component {
             case 82:
             default:
                 // refresh
-                e.preventDefault(); // cancel focus event from turn voices button
-                return this.newGame();
+                if(e.keyCode === 82) {
+                    e.preventDefault(); // cancel focus event from turn voices button
+                    return this.newGame();
+                }
+                break;
             case 18: // alt
-                e.preventDefault();
-                if (!this.state.voices) return;
-            break;
-
-            // move player up
-            case 38:
-                e.preventDefault();
-
-                if (this.controlPos("up")) {
-                    this.movePlayer(-1, 0);
+                if (e.keyCode === 18) {
+                    e.preventDefault();
+                    if (!this.state.voices) return;
                 }
             break;
-            // move player down
-            case 40:
-                e.preventDefault();
 
-                if (this.controlPos("down")) {
-                    this.movePlayer(1, 0);
-                }
-            break;
-            // move player left
-            case 37:
-                e.preventDefault();
-
-                if (this.controlPos("left")) {
-                    this.movePlayer(0, -1);
-                }
-            break;
-            // move player right
-            case 39:
-                e.preventDefault();
-
-                if (this.controlPos("right")) {
-                    this.movePlayer(0, 1);
-                }
-            break;
         }
     }
 
@@ -280,15 +188,12 @@ class Game extends Component {
     // init new game
     newGame() {
         window.clearTimeout(this.startGameTimer);
+        document.getElementById('ball').className += ' rotate';
 
         this.setState({
-            playing: false,
-
+            playing: true,
             seconds: SECONDS,
-            timerRun: false,
-
-            player: {posX: 0, posY: 0},
-
+            timerRun: true,
             score: 0
         }, () => {
 
@@ -299,6 +204,7 @@ class Game extends Component {
 
             this.buttonRefresh.blur();
         });
+
     }
 
     // handle time update
@@ -317,7 +223,7 @@ class Game extends Component {
                 playing: false,
                 timerRun: false
             });
-            
+            document.getElementById("ball").classList.remove("rotate");
             window.responsiveVoice.speak("Konec hry " + this.state.score + " bodů", "Czech Female");
         }
     }
@@ -357,7 +263,8 @@ class Game extends Component {
                     </div>
                 </header>
 
-                <div className={display ? 'Labyrinth__area' : 'Labyrinth__area blur'}>
+
+                <div className={display ? 'Playground__area' : 'Playground__area blur'}>
 
                     {
                         !this.state.display
@@ -366,6 +273,12 @@ class Game extends Component {
                     }
 
                 </div>
+                <div id="ball">
+                    <img src={ball} alt="ball" />
+                </div>
+                <form>
+                    <input className="myWord" type="text"/>
+                </form>
 
                 <div className="options options-display">
                     <button onClick={this.controlDisplay} ref={(buttonDisplay) => this.buttonDisplay = buttonDisplay}>
