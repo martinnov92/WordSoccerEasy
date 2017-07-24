@@ -2,16 +2,15 @@ import React, { Component } from 'react';
 import Sound from 'react-sound';
 import './Game.css';
 import './helpers.css';
-import './words.json';
-
 import {select_sound} from './helpers.js';
 import Timer from './Timer.js';
 
 import sounds from './sounds.js';
 import ball from './img/ball.png';
+import Word from './Word.js';
 
+const Words = require('./words.json');
 var FontAwesome = require('react-fontawesome');
-
 
 const SECONDS = 15;
 
@@ -19,13 +18,14 @@ class Game extends Component {
     constructor(props){
         super(props);
 
+
         this.state = {
             // is game on?
             playing: false,
 
             // time
             seconds: SECONDS,
-            timerRun: false,
+            timerRun: true,
 
             // voices
             voices: true,
@@ -37,8 +37,10 @@ class Game extends Component {
 
             // display labyrinth
             display: true,
-            wordStr: '',
 
+            // words
+            myWords: [],
+            activeWords: '',
 
             // score
             score: 0
@@ -119,34 +121,83 @@ class Game extends Component {
             return 60;
         }
     }
-    // Reader word
-   /* readWord(Word) {
-        word.hash
-        let wordStr = this.reader(word);
-        if (this.state.voices) {
-            window.responsiveVoice.speak(word, "Czech Female");
+
+
+    getWordIndex(words) {
+        let word = this.state.activeWords;
+        for (let i = 0; i < word.length; i++) {
+            if (word[i] === words) {
+                return i;
+            }
         }
-    }*/
+    }
 
-    /*reader(word) {
-        let wordStr = {
-            wordStr: '',
-        };
-    }*/
+  // generate random word from array
+    generateNewWord() {
+       let Array = Words.wordCs;
+       let rand = Math.floor(Math.random()*Array.length);
+       let generate = Array[rand];
 
+      this.setState({
+          activeWords: generate,
+      });
+      const onEnd = () => {
+          this.setState({
+              timerRun: true
+          });
+      };
+      if (!this.state.voices) return;
+      window.responsiveVoice.speak(generate, "Czech Female", {onend: onEnd});
+    }
 
-   /* generateNewWord() {
-       let words = wordCs;
+    changeScore(num) {
+        this.setState({
+            score: this.state.score + num
+        });
+    }
+
+    // compare last char array and first char array
+    compareWord() {
+        let my__words = this.state.myWords;
+        let active__words = this.state.activeWords;
+        let myStr = my__words.toString();
+        let activeStr = active__words.toString();
+
+        let activeStringLength = activeStr.length;
+        let generateLast = activeStr.charAt(activeStringLength -1);
+        let first = myStr.charAt(0);
+        
+        let result;
+       if(generateLast === first) {
+           result = true;
+
+       } else {
+           result = false;
+       }
+        return result;
 
     }
-*/
 
+   /* compareItems () {
+        let my_word = this.state.myWords;
+        let active_word = Words.wordCs;
 
+        for(let i=0 ;i<my_word.length;i++){
+
+            for(let j=0;j<active_word.length;j++){
+
+                if(active_word[j] !== my_word[i]){
+                    this.generateNewWord();
+                }
+            }
+        }
+    }*/
+   
 
     // handle keyDown - move player by 'Arrow keys', 'Alt' to read possible directions
     handleKeyDown(e) {
         if (!this.state.playing || !this.state.timerRun) {
-            if (e.keyCode === 82) {
+            if (e.keyCode === 16) {
                 e.preventDefault(); // cancel focus event from turn voices button
                 this.newGame();
             } else {
@@ -155,23 +206,70 @@ class Game extends Component {
         }
 
         switch (e.keyCode) {
-            case 82:
+            case 16:
             default:
                 // refresh
-                if(e.keyCode === 82) {
+                if(e.keyCode === 16) {
                     e.preventDefault(); // cancel focus event from turn voices button
                     return this.newGame();
                 }
                 break;
-            case 18: // alt
+            case 18: // alt read word
                 if (e.keyCode === 18) {
                     e.preventDefault();
+                    const onEnd = () => {
+                        this.setState({
+                            timerRun: true
+                        });
+                    };
                     if (!this.state.voices) return;
+                    window.responsiveVoice.speak(this.state.activeWords, "Czech Female", {onend: onEnd});
                 }
             break;
 
+            case 13: // confirmation entered word
+            if (e.keyCode === 13) {
+                let newTime = 0;
+                e.preventDefault();
+                this.getValueInput();
+                /*this.compareItems();*/
+
+                if(this.compareWord() === true) {
+                    newTime = this.setTime(this.state.seconds, 2);
+                    this.changeScore(10);
+                    this.handleTimeUpdate(newTime);
+                    this.setState({
+                        soundStatus: 'play',
+                        soundName: 'success'
+                    });
+                    this.generateNewWord();
+                } else {
+                    newTime = this.setTime(this.state.seconds, -2);
+                    this.changeScore(-5);
+                    this.handleTimeUpdate(newTime);
+                    this.setState({
+                        soundStatus: 'play',
+                        soundName: 'failure',
+                    });
+                }
+            }
+            break;
         }
     }
+
+
+    getValueInput () {
+     let enteredWord =  document.getElementById('myWord').value;
+        this.setState({
+            myWords: [enteredWord]
+        });
+        document.getElementById('myWord').value= "";
+    }
+
+    stopRotate () {
+       document.getElementById("ball").classList.remove("rotate");
+    }
+
 
     // handle keyUp
     handleKeyUp(e) {
@@ -187,20 +285,16 @@ class Game extends Component {
 
     // init new game
     newGame() {
-        window.clearTimeout(this.startGameTimer);
         document.getElementById('ball').className += ' rotate';
+        document.getElementById("myWord").disabled = false;
+        this.generateNewWord();
 
         this.setState({
             playing: true,
             seconds: SECONDS,
             timerRun: true,
-            score: 0
+            score: 0,
         }, () => {
-
-            this.setState({
-                playing: true,
-                timerRun: true
-            });
 
             this.buttonRefresh.blur();
         });
@@ -223,8 +317,9 @@ class Game extends Component {
                 playing: false,
                 timerRun: false
             });
-            document.getElementById("ball").classList.remove("rotate");
             window.responsiveVoice.speak("Konec hry " + this.state.score + " bodů", "Czech Female");
+            this.stopRotate();
+            document.getElementById("myWord").disabled = true;
         }
     }
 
@@ -265,19 +360,23 @@ class Game extends Component {
 
 
                 <div className={display ? 'Playground__area' : 'Playground__area blur'}>
-
                     {
                         !this.state.display
                             ? <div className="overlay"/>
                             : null
                     }
-
                 </div>
+
                 <div id="ball">
                     <img src={ball} alt="ball" />
+
+                   <Word
+                        value={this.state.activeWords}
+                    />
+
                 </div>
                 <form>
-                    <input className="myWord" type="text"/>
+                    <input id="myWord" type="text"/>
                 </form>
 
                 <div className="options options-display">

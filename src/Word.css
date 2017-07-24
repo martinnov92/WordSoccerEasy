@@ -1,0 +1,19 @@
+.word__box {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 20%;
+    height: 50px;
+    min-width: 340px;
+    background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #FFFFFF), color-stop(100, #FFFF00));
+    border-radius: 10px;
+    z-index: 10;
+}
+
+.word__label {
+    text-align: center;
+    text-transform: lowercase;
+    font-weight: bold;
+    font-size: 24px;
+}
