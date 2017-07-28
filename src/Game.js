@@ -152,14 +152,36 @@ class Game extends Component {
             });
         };
         if (!this.state.voices) return;
-        window.responsiveVoice.speak(this.state.Words, "Czech Female", {onend: onEnd});
+        window.responsiveVoice.speak(this.state.Words, "Czech Female",{onend:onEnd});
+    }
+
+    compareMyWords () {
+        let { usedWords } = this.state;
+        const copyArr = [...this.state.usedWords];
+        const lastWord = usedWords[usedWords.length - 1];
+        let newTime = 0;
+        copyArr.pop();
+
+        const alreadyInArr = copyArr.indexOf(lastWord);
+
+        if (usedWords.length > 1 && alreadyInArr >= 0) {
+            alert("Toto už bylo použité, zvolte si jiné");
+            this.changeScore(-15);
+            newTime = this.setTime(this.state.seconds, -7);
+            this.handleTimeUpdate(newTime);
+            this.setState({
+                soundStatus: 'play',
+                soundName: 'failure',
+            });
+        }
+
     }
 
     // compare last char array and first char array
     compareWord() {
         let myWords = this.state.usedWords;
         let activeWords = this.state.Words;
-        let myStr = myWords.toString();
+        let myStr = myWords[myWords.length - 1].toString();
         let activeStr = activeWords.toString();
 
         let myFirst = myStr.charAt(0).toLowerCase();
@@ -217,7 +239,7 @@ class Game extends Component {
 
        if(generateLast === myFirst) {
             const correctWord = words.filter((word) => word.startsWith(myFirst));
-            if (correctWord.indexOf(myWords[0]) >= 0) {
+            if (correctWord.indexOf(myWords[myWords.length - 1]) >= 0) {
                 result = true;
             }
        } else {
@@ -225,7 +247,6 @@ class Game extends Component {
        }
         return result;
     }
-   
 
     // handle keyDown - move player by 'Arrow keys', 'Alt' to read possible directions
     handleKeyDown(e) {
@@ -261,12 +282,12 @@ class Game extends Component {
                 }
             break;
 
-
             case 13: // confirmation entered word
             if (e.keyCode === 13) {
                 let newTime = 0;
                 e.preventDefault();
                 this.getValueInput();
+
                 let myWords = this.state.usedWords;
                 let myStr = myWords.toString();
                 let myStrLength = myStr.length;
@@ -291,6 +312,7 @@ class Game extends Component {
                         soundName: 'success',
                         Words: newWord
                     });
+                    this.compareMyWords();
 
                 } else {
                     newTime = this.setTime(this.state.seconds, -2);
@@ -309,17 +331,11 @@ class Game extends Component {
 
     // get value from text input and save to state
     getValueInput () {
-     let enteredWord =  document.getElementById('myWord').value;
-     let arrayWord = [enteredWord];
-     let myUsedWord = [];
-     for (let i=0; i < arrayWord.length; i++) {
-         myUsedWord.push(arrayWord[i]);
-     }
-        this.setState({
-            usedWords: myUsedWord
-        });
-
-        document.getElementById('myWord').value= "";
+     let enteredWord  = document.getElementById('myWord').value;
+     let myUsedWord = this.state.usedWords;
+     myUsedWord.push(enteredWord);
+     document.getElementById('myWord').value= "";
+     return enteredWord;
     }
 
     // stop rotate ball
@@ -345,8 +361,6 @@ class Game extends Component {
         document.getElementById("myWord").disabled = false;
         let newWord = this.generateNewWord(Words.wordCs);
 
-        /*this.correctWords();*/
-
         this.setState({
             playing: true,
             seconds: SECONDS,
@@ -357,9 +371,7 @@ class Game extends Component {
 
             this.buttonRefresh.blur();
             this.readWord();
-
         });
-
     }
 
     // handle time update
@@ -418,7 +430,6 @@ class Game extends Component {
                         </button>
                     </div>
                 </header>
-
 
                 <div className={display ? 'Playground__area' : 'Playground__area blur'}>
                     {

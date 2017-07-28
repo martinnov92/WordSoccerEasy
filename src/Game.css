@@ -170,4 +170,15 @@
         display: block;
         font-size: 11px;
     }
+    #ball img {
+        width: 100%;
+    }
+
+    .word__box {
+        min-width: 75% !important;
+    }
+
+    .word__box {
+        font-size: 22px;
+    }
 }
