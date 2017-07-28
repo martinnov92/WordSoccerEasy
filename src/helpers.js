@@ -11,8 +11,8 @@ export function shuffleArray(array) {
 }
 
 // return random number
-export function randomWords(min, max) {
-    return Math.floor(max - Math.random()*(max - min));
+export function randomWords() {
+    return Math.floor(Math.random()*Array.length);
 }
 
 // select sound based on voice name from array of sound objects

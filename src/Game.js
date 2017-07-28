@@ -12,7 +12,7 @@ import Word from './Word.js';
 const Words = require('./words.json');
 var FontAwesome = require('react-fontawesome');
 
-const SECONDS = 15;
+const SECONDS = 20;
 
 class Game extends Component {
     constructor(props){
@@ -35,15 +35,15 @@ class Game extends Component {
             soundStatus: 'stop',
             soundName: '',
 
-            // display labyrinth
+            // display wordSoccer
             display: true,
 
             // words
-            myWords: [],
-            activeWords: '',
+            usedWords: [],
+            Words: '',
 
             // score
-            score: 0
+            score: 0,
         };
 
         this.turnVoices = this.turnVoices.bind(this);
@@ -122,9 +122,8 @@ class Game extends Component {
         }
     }
 
-
     getWordIndex(words) {
-        let word = this.state.activeWords;
+        let word = Words.wordCs;
         for (let i = 0; i < word.length; i++) {
             if (word[i] === words) {
                 return i;
@@ -133,87 +132,122 @@ class Game extends Component {
     }
 
   // generate random word from array
-    generateNewWord() {
-       let Array = Words.wordCs;
-       let rand = Math.floor(Math.random()*Array.length);
-       let generate = Array[rand];
-
-      this.setState({
-          activeWords: generate,
-      });
-      const onEnd = () => {
-          this.setState({
-              timerRun: true
-          });
-      };
-      if (!this.state.voices) return;
-      window.responsiveVoice.speak(generate, "Czech Female", {onend: onEnd});
+    generateNewWord(Array) {
+        let randomNumber = Math.floor(Math.random() * Array.length)+1;
+        let generateWord = Array[randomNumber];
+        return generateWord;
     }
 
+    // change score when correct answer
     changeScore(num) {
         this.setState({
             score: this.state.score + num
         });
     }
 
+    readWord () {
+        const onEnd = () => {
+            this.setState({
+                timerRun: true
+            });
+        };
+        if (!this.state.voices) return;
+        window.responsiveVoice.speak(this.state.Words, "Czech Female", {onend: onEnd});
+    }
+
     // compare last char array and first char array
     compareWord() {
-        let my__words = this.state.myWords;
-        let active__words = this.state.activeWords;
-        let myStr = my__words.toString();
-        let activeStr = active__words.toString();
+        let myWords = this.state.usedWords;
+        let activeWords = this.state.Words;
+        let myStr = myWords.toString();
+        let activeStr = activeWords.toString();
 
+        let myFirst = myStr.charAt(0).toLowerCase();
         let activeStringLength = activeStr.length;
         let generateLast = activeStr.charAt(activeStringLength -1);
-        let first = myStr.charAt(0);
-        
-        let result;
-       if(generateLast === first) {
-           result = true;
+        switch (generateLast) {
+            case 'á':
+                generateLast = 'a';
+                break;
 
+            case 'é':
+                generateLast = 'e';
+                break;
+
+            case 'ě':
+                generateLast = 'e';
+                break;
+
+            case 'í':
+                generateLast = 'i';
+                break;
+
+            case 'ó':
+                generateLast = 'o';
+                break;
+
+            case 'ú':
+                generateLast = 'u';
+                break;
+
+            case 'ů':
+                generateLast = 'u';
+                break;
+
+            case 'ý':
+                generateLast = 'y';
+                break;
+
+            case 'ť':
+                generateLast = 't';
+                break;
+
+            case 'ď':
+                generateLast = 'd';
+                break;
+
+            case 'ň':
+                generateLast = 'n';
+                break;
+        }
+        let result;
+
+        let words = Words.wordCs;
+        words = words.map(v => v.toLowerCase());
+
+       if(generateLast === myFirst) {
+            const correctWord = words.filter((word) => word.startsWith(myFirst));
+            if (correctWord.indexOf(myWords[0]) >= 0) {
+                result = true;
+            }
        } else {
            result = false;
        }
         return result;
-
     }
-
-   /* compareItems () {
-        let my_word = this.state.myWords;
-        let active_word = Words.wordCs;
-
-        for(let i=0 ;i<my_word.length;i++){
-
-            for(let j=0;j<active_word.length;j++){
-
-                if(active_word[j] !== my_word[i]){
-                    this.generateNewWord();
-                }
-            }
-        }
-    }*/
    
 
     // handle keyDown - move player by 'Arrow keys', 'Alt' to read possible directions
     handleKeyDown(e) {
-        if (!this.state.playing || !this.state.timerRun) {
+        /*if (!this.state.playing || !this.state.timerRun) {
             if (e.keyCode === 16) {
                 e.preventDefault(); // cancel focus event from turn voices button
                 this.newGame();
             } else {
                 return;
             }
-        }
+        }*/
 
         switch (e.keyCode) {
-            case 16:
+           /* case 16:
             default:
                 // refresh
                 if(e.keyCode === 16) {
                     e.preventDefault(); // cancel focus event from turn voices button
                     return this.newGame();
                 }
-                break;
+            break;*/
+
             case 18: // alt read word
                 if (e.keyCode === 18) {
                     e.preventDefault();
@@ -223,26 +257,41 @@ class Game extends Component {
                         });
                     };
                     if (!this.state.voices) return;
-                    window.responsiveVoice.speak(this.state.activeWords, "Czech Female", {onend: onEnd});
+                    window.responsiveVoice.speak(this.state.Words, "Czech Female", {onend: onEnd});
                 }
             break;
+
 
             case 13: // confirmation entered word
             if (e.keyCode === 13) {
                 let newTime = 0;
                 e.preventDefault();
                 this.getValueInput();
-                /*this.compareItems();*/
+                let myWords = this.state.usedWords;
+                let myStr = myWords.toString();
+                let myStrLength = myStr.length;
+                let myLast = myStr.charAt(myStrLength -1);
 
+                // fix working function for IE
+                if (!String.prototype.startsWith) {
+                    String.prototype.startsWith = function(searchString, position){
+                        position = position || 0;
+                        return this.substr(position, searchString.length) === searchString;
+                    };
+                }
+                const lastCharWord = Words.wordCs.filter((word) => word.startsWith(myLast));
                 if(this.compareWord() === true) {
-                    newTime = this.setTime(this.state.seconds, 2);
+                    newTime = this.setTime(this.state.seconds, 5);
                     this.changeScore(10);
                     this.handleTimeUpdate(newTime);
+                    let newWord = this.generateNewWord(lastCharWord);
+
                     this.setState({
                         soundStatus: 'play',
-                        soundName: 'success'
+                        soundName: 'success',
+                        Words: newWord
                     });
-                    this.generateNewWord();
+
                 } else {
                     newTime = this.setTime(this.state.seconds, -2);
                     this.changeScore(-5);
@@ -252,24 +301,31 @@ class Game extends Component {
                         soundName: 'failure',
                     });
                 }
+                this.readWord();
             }
             break;
         }
     }
 
-
+    // get value from text input and save to state
     getValueInput () {
      let enteredWord =  document.getElementById('myWord').value;
+     let arrayWord = [enteredWord];
+     let myUsedWord = [];
+     for (let i=0; i < arrayWord.length; i++) {
+         myUsedWord.push(arrayWord[i]);
+     }
         this.setState({
-            myWords: [enteredWord]
+            usedWords: myUsedWord
         });
+
         document.getElementById('myWord').value= "";
     }
 
+    // stop rotate ball
     stopRotate () {
        document.getElementById("ball").classList.remove("rotate");
     }
-
 
     // handle keyUp
     handleKeyUp(e) {
@@ -287,16 +343,21 @@ class Game extends Component {
     newGame() {
         document.getElementById('ball').className += ' rotate';
         document.getElementById("myWord").disabled = false;
-        this.generateNewWord();
+        let newWord = this.generateNewWord(Words.wordCs);
+
+        /*this.correctWords();*/
 
         this.setState({
             playing: true,
             seconds: SECONDS,
             timerRun: true,
             score: 0,
+            Words: newWord
         }, () => {
 
             this.buttonRefresh.blur();
+            this.readWord();
+
         });
 
     }
@@ -365,19 +426,21 @@ class Game extends Component {
                             ? <div className="overlay"/>
                             : null
                     }
+
+                    <div id="ball">
+                        <img src={ball} alt="ball" />
+
+                        <Word
+                            value={this.state.Words}
+                        />
+
+                    </div>
                 </div>
-
-                <div id="ball">
-                    <img src={ball} alt="ball" />
-
-                   <Word
-                        value={this.state.activeWords}
-                    />
-
+                <div className="word__container">
+                    <form>
+                        <input id="myWord" type="text" autoFocus={this}/>
+                    </form>
                 </div>
-                <form>
-                    <input id="myWord" type="text"/>
-                </form>
 
                 <div className="options options-display">
                     <button onClick={this.controlDisplay} ref={(buttonDisplay) => this.buttonDisplay = buttonDisplay}>

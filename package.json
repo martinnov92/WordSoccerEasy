@@ -4,6 +4,7 @@
   "private": false,
   "homepage": "https://davids-inflexity.github.io/WordSoccerEasy/",
   "dependencies": {
+    "diacritic": "0.0.2",
     "json-loader": "^0.5.4",
     "react": "^15.5.4",
     "react-dom": "^15.5.4",
