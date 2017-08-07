@@ -40,7 +40,7 @@ class Game extends Component {
 
             // words
             usedWords: [],
-            Words: '',
+            Words: [],
 
             // score
             score: 0,
@@ -148,7 +148,6 @@ class Game extends Component {
     readWord () {
         const onEnd = () => {
             this.setState({
-                timerRun: true
             });
         };
         if (!this.state.voices) return;
@@ -162,19 +161,33 @@ class Game extends Component {
         let newTime = 0;
         copyArr.pop();
 
+        let comparing = true;
+
         const alreadyInArr = copyArr.indexOf(lastWord);
 
         if (usedWords.length > 1 && alreadyInArr >= 0) {
-            alert("Toto už bylo použité, zvolte si jiné");
+            const onEnd = () => {
+                this.setState({
+                    timerRun: true
+                });
+            };
+            if (!this.state.voices) return;
+            window.responsiveVoice.speak("Toto slovo jste už použili, zvolte si prosím jiné", "Czech Female", {onend: onEnd});
+            document.getElementById("badWord").style.display = "flex";
             this.changeScore(-15);
             newTime = this.setTime(this.state.seconds, -7);
             this.handleTimeUpdate(newTime);
             this.setState({
                 soundStatus: 'play',
                 soundName: 'failure',
+                timerRun: false
             });
+            comparing = false;
+        } else {
+            document.getElementById("badWord").style.display = "none";
+            comparing = true;
         }
-
+        return comparing;
     }
 
     // compare last char array and first char array
@@ -305,14 +318,18 @@ class Game extends Component {
                     newTime = this.setTime(this.state.seconds, 5);
                     this.changeScore(10);
                     this.handleTimeUpdate(newTime);
-                    let newWord = this.generateNewWord(lastCharWord);
+                    let comparing = this.compareMyWords();
 
-                    this.setState({
-                        soundStatus: 'play',
-                        soundName: 'success',
-                        Words: newWord
-                    });
-                    this.compareMyWords();
+                    if(comparing === true) {
+                        let newWord = this.generateNewWord(lastCharWord);
+
+                        this.setState({
+                            soundStatus: 'play',
+                            soundName: 'success',
+                            Words: newWord
+                        });
+                        this.readWord();
+                    }
 
                 } else {
                     newTime = this.setTime(this.state.seconds, -2);
@@ -323,7 +340,7 @@ class Game extends Component {
                         soundName: 'failure',
                     });
                 }
-                this.readWord();
+
             }
             break;
         }
@@ -360,6 +377,8 @@ class Game extends Component {
         document.getElementById('ball').className += ' rotate';
         document.getElementById("myWord").disabled = false;
         let newWord = this.generateNewWord(Words.wordCs);
+        let comparing = this.compareMyWords();
+
 
         this.setState({
             playing: true,
@@ -370,6 +389,7 @@ class Game extends Component {
         }, () => {
 
             this.buttonRefresh.blur();
+
             this.readWord();
         });
     }
@@ -437,6 +457,9 @@ class Game extends Component {
                             ? <div className="overlay"/>
                             : null
                     }
+                    <div id="badWord">
+                        Toto slovo jste už použili, zvolte si prosím jiné
+                    </div>
 
                     <div id="ball">
                         <img src={ball} alt="ball" />
