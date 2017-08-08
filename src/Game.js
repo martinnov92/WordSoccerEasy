@@ -18,7 +18,6 @@ class Game extends Component {
     constructor(props){
         super(props);
 
-
         this.state = {
             // is game on?
             playing: false,
@@ -68,7 +67,6 @@ class Game extends Component {
 
     componentDidMount() {
         this.newGame();
-
         // add key listener
         document.addEventListener('keydown', this.handleKeyDown);
         document.addEventListener('keyup', this.handleKeyUp);
@@ -122,15 +120,6 @@ class Game extends Component {
         }
     }
 
-    getWordIndex(words) {
-        let word = Words.wordCs;
-        for (let i = 0; i < word.length; i++) {
-            if (word[i] === words) {
-                return i;
-            }
-        }
-    }
-
   // generate random word from array
     generateNewWord(Array) {
         let randomNumber = Math.floor(Math.random() * Array.length)+1;
@@ -145,6 +134,7 @@ class Game extends Component {
         });
     }
 
+    // read new generate word
     readWord () {
         const onEnd = () => {
             this.setState({
@@ -154,6 +144,7 @@ class Game extends Component {
         window.responsiveVoice.speak(this.state.Words, "Czech Female",{onend:onEnd});
     }
 
+    // compare my word when duplicate word
     compareMyWords () {
         let { usedWords } = this.state;
         const copyArr = [...this.state.usedWords];
@@ -340,7 +331,6 @@ class Game extends Component {
                         soundName: 'failure',
                     });
                 }
-
             }
             break;
         }
@@ -377,8 +367,6 @@ class Game extends Component {
         document.getElementById('ball').className += ' rotate';
         document.getElementById("myWord").disabled = false;
         let newWord = this.generateNewWord(Words.wordCs);
-        let comparing = this.compareMyWords();
-
 
         this.setState({
             playing: true,
@@ -389,7 +377,6 @@ class Game extends Component {
         }, () => {
 
             this.buttonRefresh.blur();
-
             this.readWord();
         });
     }
@@ -472,7 +459,7 @@ class Game extends Component {
                 </div>
                 <div className="word__container">
                     <form>
-                        <input id="myWord" type="text" autoFocus={this}/>
+                        <input id="myWord" type="text" autoFocus={this} autoComplete="off"/>
                     </form>
                 </div>
 
